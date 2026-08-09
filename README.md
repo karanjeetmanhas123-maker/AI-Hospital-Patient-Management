@@ -307,7 +307,9 @@ Error handling can include:
    Purpose: Generate reports
 
 
- ## 15. 📁 Project Structure
+## 15. 📁 Project Structure
+
+```text
 AI-Hospital-Patient-Management/
 │
 ├── README.md
@@ -338,7 +340,9 @@ AI-Hospital-Patient-Management/
 │   └── AI-Hospital-Presentation.pptx
 │
 └── demo/
-    └── demo-link.txt  
+    └── demo-link.txt
+```
+
 
 
 
