@@ -1,0 +1,579 @@
+{
+  "name": "Patient Registration 1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "patient-registration",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "caf34654-a375-4dd2-aa43-30f79dca9162",
+      "name": "Webhook",
+      "webhookId": "1fffa423-6bbf-4d9b-8e3d-4dab8e3dc7b1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "02bdee37-d527-484a-bed2-b92bf3b398db",
+              "name": "Name",
+              "value": "={{ $json.body.name }}\n",
+              "type": "string"
+            },
+            {
+              "id": "401f8baa-f6db-44b9-a385-2dc6d756cbd3",
+              "name": "Age",
+              "value": "={{ $json.body.age }}\n",
+              "type": "string"
+            },
+            {
+              "id": "88c65081-e570-49aa-9a30-acc5cb1e3c2b",
+              "name": "Gender",
+              "value": "={{ $json.body.gender }}",
+              "type": "string"
+            },
+            {
+              "id": "07c9ac7f-1bd8-4a56-b23f-015b96e171e7",
+              "name": "Phone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "d10378b9-1794-48d7-a0d7-1e7f56f1a3df",
+              "name": "Email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "03a284fb-268d-4bb2-a7ae-c6da3b5cf8c3",
+              "name": "Disease",
+              "value": "={{ $json.body.disease }}",
+              "type": "string"
+            },
+            {
+              "id": "1d2f53ea-5be5-4c13-9232-ed6964292243",
+              "name": "Doctor",
+              "value": "={{ $json.body.doctor }}",
+              "type": "string"
+            },
+            {
+              "id": "e5c4a934-5a03-4475-b846-250c63413505",
+              "name": "Registration Date",
+              "value": "={{ $now.toFormat('dd-MM-yyyy') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c4262a88-67d9-4f0a-bca2-74248f113c98",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2042179877,
+          "mode": "list",
+          "cachedResultName": "Patients",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=2042179877"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $('Edit Fields').item.json.Email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "329de57d-39de-420f-aa5f-fcbea5424fae",
+      "name": "Check Existing PatientCheck Existing Patient",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cbf010e3-b26d-4b5d-a1c2-02c005e0ad2e",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "9219bf95-b736-4403-a67f-f2c71c210e72",
+      "name": "Email Exists?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": \"Patient already registered\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "8494d2dd-dba6-4da4-b4c8-9dfbba2f813d",
+      "name": "Already Registered"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2042179877,
+          "mode": "list",
+          "cachedResultName": "Patients",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=2042179877"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Edit Fields').item.json.Name }}",
+            "Age": "={{ $('Edit Fields').item.json.Age }}",
+            "Gender": "={{ $('Edit Fields').item.json.Gender }}",
+            "Phone": "={{ $('Edit Fields').item.json.Phone }}",
+            "Email": "={{ $('Edit Fields').item.json.Email }}",
+            "Disease": "={{ $('Edit Fields').item.json.Disease }}",
+            "Doctor": "={{ $('Edit Fields').item.json.Doctor }}",
+            "Registration Date": "={{ $('Edit Fields').item.json['Registration Date'] }}",
+            "Patient ID": "=P008"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Patient ID",
+              "displayName": "Patient ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Age",
+              "displayName": "Age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Disease",
+              "displayName": "Disease",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Doctor",
+              "displayName": "Doctor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Date",
+              "displayName": "Registration Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        176
+      ],
+      "id": "376b1cea-26a7-498e-9514-eddb9765e90c",
+      "name": "Add Patient",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Generate a short and professional hospital registration welcome message.\n\nPatient Name: {{ $('Edit Fields').item.json.Name }}\nPatient ID: P004\nDoctor: {{ $('Edit Fields').item.json.Doctor }}\n\nTell the patient that their registration was successful.\nTell them to keep their Patient ID for future appointments.\nDo not provide any medical advice.\nKeep the message under 80 words."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "0f4ccebf-475a-42ac-aaa5-d29520f99794",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dCi7lXyoyEqHc6Mr",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Edit Fields').item.json.Email }}",
+        "subject": "Hospital Registration Successful",
+        "emailType": "text",
+        "message": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        96
+      ],
+      "id": "542b7bf4-efbe-4c1a-b011-56be7823397b",
+      "name": "Send a message",
+      "webhookId": "4ebfff4b-bcaf-4ebf-aaf7-18d460d7bc0f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XhPG9OTzQLa9qExV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Patient registered successfully\",\n  \"patientId\": \"P004\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1600,
+        96
+      ],
+      "id": "09945350-a00d-4e65-86df-c8977ea4ebfe",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 138577069,
+          "mode": "list",
+          "cachedResultName": "Activity Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=138577069"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Time": "={{ $now.toFormat('dd-MM-yyyy HH:mm:ss') }}",
+            "Workflow": "Patient Registration",
+            "Status": "Success",
+            "Patient ID": "={{ $('Add Patient').item.json[\"Patient ID\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow",
+              "displayName": "Workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patient ID",
+              "displayName": "Patient ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1808,
+        96
+      ],
+      "id": "0ad31ed8-ff71-48c3-81f4-26a650ded23c",
+      "name": "Log Activity",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Check Existing PatientCheck Existing Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing PatientCheck Existing Patient": {
+      "main": [
+        [
+          {
+            "node": "Email Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Exists?": {
+      "main": [
+        [
+          {
+            "node": "Already Registered",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Patient": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "oafeLejW0aewhE6r",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

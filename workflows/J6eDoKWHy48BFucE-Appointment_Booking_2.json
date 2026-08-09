@@ -1,0 +1,574 @@
+{
+  "name": "Appointment Booking 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "book-appointment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2a9a81ac-134c-48b8-851f-619f8c92b023",
+      "name": "Webhook",
+      "webhookId": "d1b8456f-e247-4498-b969-bdfe72fc3326"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2042179877,
+          "mode": "list",
+          "cachedResultName": "Patients",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=2042179877"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Patient ID",
+              "lookupValue": "={{ $json.body.patientId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7f76e027-3cb8-4970-b999-88eff6be126d",
+      "name": "Find Patient",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "calendar": {
+          "__rl": true,
+          "value": "karanjeetmanhas123@gmail.com",
+          "mode": "list",
+          "cachedResultName": "karanjeetmanhas123@gmail.com"
+        },
+        "timeMin": "={{ DateTime.fromISO($('Webhook').item.json.body.date + 'T' + $('Webhook').item.json.body.time, { zone: 'Asia/Kolkata' }).toISO() }}",
+        "timeMax": "={{ DateTime.fromISO($('Webhook').item.json.body.date + 'T' + $('Webhook').item.json.body.time, { zone: 'Asia/Kolkata' }).plus({ minutes: 30 }).toISO() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e006efde-f514-4642-8c6e-3f757d82a8e9",
+      "name": "Check Appointment Slot",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "AZccl1PLQbITnsVP",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a24d35d2-7fbe-4f6c-80ab-d5bda16c0c5f",
+              "leftValue": "={{ $json.available }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "2a295d79-7925-429a-ae0a-2e510b164b86",
+      "name": "Slot Available?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"The selected appointment slot is unavailable. Please choose another time.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        96
+      ],
+      "id": "a49ded01-0638-406c-9783-da8f8cab6558",
+      "name": "Slot Unavailable"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "karanjeetmanhas123@gmail.com",
+          "mode": "list",
+          "cachedResultName": "karanjeetmanhas123@gmail.com"
+        },
+        "start": "={{ DateTime.fromISO($('Webhook').item.json.body.date + 'T' + $('Webhook').item.json.body.time, { zone: 'Asia/Kolkata' }).toISO() }}",
+        "end": "={{ DateTime.fromISO($('Webhook').item.json.body.date + 'T' + $('Webhook').item.json.body.time, { zone: 'Asia/Kolkata' }).plus({ minutes: 30 }).toISO() }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "44a40cc3-3515-4853-8efd-5eaf23cbf1e8",
+      "name": "Create Appointment Event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "AZccl1PLQbITnsVP",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 481978696,
+          "mode": "list",
+          "cachedResultName": "Appointments",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=481978696"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Patient ID": "={{ $('Webhook').item.json.body.patientId }}",
+            "Doctor": "={{ $('Webhook').item.json.body.doctor }}",
+            "Date": "={{ $('Webhook').item.json.body.date }}",
+            "Time": "={{ $('Webhook').item.json.body.time }}",
+            "Status": "Confirmed",
+            "Appointment ID": "={{ 'A' + String($('Get Existing Appointments').all().length + 1).padStart(3, '0') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Appointment ID",
+              "displayName": "Appointment ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patient ID",
+              "displayName": "Patient ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Doctor",
+              "displayName": "Doctor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        -64
+      ],
+      "id": "9b9c14a5-696a-4b45-9e73-e2112622a42b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Find Patient').item.json.Email }}",
+        "subject": "Appointment Confirmed",
+        "emailType": "text",
+        "message": "=Your appointment has been successfully booked.  Doctor: {{ $('Webhook').item.json.body.doctor }} Date: {{ $('Webhook').item.json.body.date }} Time: {{ $('Webhook').item.json.body.time }}  Thank you, AI Hospital",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1744,
+        -176
+      ],
+      "id": "cd469849-97fe-4209-b9ad-137ea2bba69f",
+      "name": "Send a message",
+      "webhookId": "32e6487f-c177-4727-bc70-b3a1582e0efc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XhPG9OTzQLa9qExV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Appointment booked successfully\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1824,
+        96
+      ],
+      "id": "5eefe1f8-46d8-4d8f-b97a-517e141e2247",
+      "name": "Appointment Confirmed"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 481978696,
+          "mode": "list",
+          "cachedResultName": "Appointments",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=481978696"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "9143f759-647d-4c3c-971a-86679f2640c6",
+      "name": "Get Existing Appointments",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        -96
+      ],
+      "id": "feaf2bf3-1ef2-45f1-920a-950481730db3",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 138577069,
+          "mode": "list",
+          "cachedResultName": "Activity Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=138577069"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Time": "={{ $now.toFormat('dd-MM-yyyy HH:mm:ss') }}",
+            "Workflow": "Appointment Booking",
+            "Status": "Success",
+            "Patient ID": "={{ $('Find Patient').item.json[\"Patient ID\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow",
+              "displayName": "Workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patient ID",
+              "displayName": "Patient ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2064,
+        256
+      ],
+      "id": "0f8e0fc3-350f-4c5e-8222-a664d98e56bc",
+      "name": "Log Activity",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Find Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Patient": {
+      "main": [
+        [
+          {
+            "node": "Check Appointment Slot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Appointment Slot": {
+      "main": [
+        [
+          {
+            "node": "Slot Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slot Available?": {
+      "main": [
+        [
+          {
+            "node": "Create Appointment Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slot Unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Appointment Event": {
+      "main": [
+        [
+          {
+            "node": "Get Existing Appointments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Appointment Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Appointments": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Appointment Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "oafeLejW0aewhE6r",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,603 @@
+{
+  "name": "Medical Report Upload 3",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "medical-report",
+        "options": {
+          "binaryPropertyName": "file"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "7496ce8c-9353-4219-bbf4-07a922bcac54",
+      "name": "Webhook",
+      "webhookId": "9e8543d0-31fd-403d-87e4-855862c27152"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ocr.space/parse/image",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "K85236268488957"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file0"
+            },
+            {
+              "name": "language",
+              "value": "eng"
+            },
+            {
+              "name": "isOverlayRequired",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c6489a4d-1e18-465b-bfb1-43b3e5a7b577",
+      "name": "OCR Medical Report"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2042179877,
+          "mode": "list",
+          "cachedResultName": "Patients",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=2042179877"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Patient ID",
+              "lookupValue": "={{ $('Webhook').item.json.body.patientId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        0
+      ],
+      "id": "6df21a81-34b9-4807-b34a-c78243bb9db1",
+      "name": "Find Patient",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI",
+          "cachedResultUrl": ""
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a medical report summarization assistant.\n\nAnalyze the following medical report.\n\nReturn ONLY valid JSON in exactly this structure:\n\n{\n  \"disease\": \"\",\n  \"risk_level\": \"\",\n  \"doctor_advice\": \"\",\n  \"medicines\": \"\",\n  \"lifestyle_tips\": \"\",\n  \"summary\": \"\"\n}\n\nRules:\n- risk_level must be exactly one of: \"Low\", \"Medium\", or \"High\".\n- Base the response only on information present in the medical report.\n- Do not invent medicines, diagnoses, or test results.\n- Keep the summary concise and easy to understand.\n- The output is for decision support and does not replace a doctor's clinical judgment.\n- Do not include Markdown.\n- Do not include ```json.\n- Return only the JSON object.\n\nMedical Report:\n\n{{ $json.ParsedResults[0].ParsedText }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        176,
+        0
+      ],
+      "id": "d9c648d4-962e-4ff6-b4d8-ceba967dd4fb",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dCi7lXyoyEqHc6Mr",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 670886284,
+          "mode": "list",
+          "cachedResultName": "Reports",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=670886284"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Patient ID": "={{ $('Find Patient').item.json['Patient ID'] }}",
+            "Report Date": "={{ $now.toISODate() }}",
+            "Risk Level": "={{ JSON.parse($('Message a model').item.json.output[0].content[0].text).risk_level }}",
+            "Medicines": "={{ JSON.parse($('Message a model').item.json.output[0].content[0].text).medicines }}",
+            "Lifestyle Tips": "={{ JSON.parse($('Message a model').item.json.output[0].content[0].text).lifestyle_tips }}",
+            "Doctor Advice": "={{ JSON.parse($('Message a model').item.json.output[0].content[0].text).doctor_advice }}",
+            "Summary": "={{ JSON.parse($('Message a model').item.json.output[0].content[0].text).summary }}",
+            "Disease": "={{ JSON.parse($('Message a model').item.json.output[0].content[0].text).disease }}",
+            "Gmail": "={{ $json.Email }}",
+            "Report ID": "={{ \"R\" + Date.now() }}",
+            "Doctor Approval": "Pending",
+            "Follow-up Sent": "No"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Report ID",
+              "displayName": "Report ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Patient ID",
+              "displayName": "Patient ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Gmail",
+              "displayName": "Gmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Report Date",
+              "displayName": "Report Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Disease",
+              "displayName": "Disease",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Risk Level",
+              "displayName": "Risk Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Medicines",
+              "displayName": "Medicines",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lifestyle Tips",
+              "displayName": "Lifestyle Tips",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Doctor Advice",
+              "displayName": "Doctor Advice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Doctor Approval",
+              "displayName": "Doctor Approval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Approval Date",
+              "displayName": "Approval Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Follow-up Sent",
+              "displayName": "Follow-up Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        720,
+        0
+      ],
+      "id": "2bdb2370-4c90-4578-ae9f-c033bed207bd",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fb5630ea-31f4-44eb-8fd8-2c455df9ce3d",
+              "leftValue": "={{ $('Append row in sheet').item.json[\"Risk Level\"] }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1184,
+        -16
+      ],
+      "id": "e0e49aa7-f802-479b-8f17-45d898aa3e46",
+      "name": "High Risk?"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Find Patient').item.json.Email }}",
+        "subject": "URGENT: High Risk Medical Report | AI Hospital",
+        "message": "=<h2>High Risk Medical Report Alert</h2>\n\n<p>A medical report has been flagged for priority review.</p>\n\n<p>\n<b>Patient:</b> {{ $('Find Patient').item.json[\"Name\"] }}<br>\n<b>Patient ID:</b> {{ $('Find Patient').item.json[\"Patient ID\"] }}<br>\n<b>Risk Level:</b> {{ $json[\"Risk Level\"] }}\n</p>\n\n<p>\n<b>AI Summary:</b><br>\n{{ $json[\"Summary\"] }}\n</p>\n\n<p>\n<b>Doctor Advice:</b><br>\n{{ $json[\"Doctor Advice\"] }}\n</p>\n\n<p>Please review the patient's original report and AI-generated summary before taking clinical action.</p>\n\n<p>\nRegards,<br>\n<b>AI Hospital Management System</b>\n</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        -208
+      ],
+      "id": "07747f0b-fb52-4f99-afed-704575473e81",
+      "name": "Notify Doctor - High Risk",
+      "webhookId": "4dc70adf-8c21-442c-81f0-0c891ebe583e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XhPG9OTzQLa9qExV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Find Patient').item.json[\"Email\"] }}",
+        "subject": "Medical Report Summary | AI Hospital Management System",
+        "message": "=<div style=\"font-family: Arial, sans-serif; max-width: 650px; margin: auto; line-height: 1.6;\">  <h2>Medical Report Summary</h2>  <p>Dear {{ $('Find Patient').item.json[\"Name\"] }},</p>  <p>Your medical report has been processed. A summary of the available report information is provided below.</p>  <hr>  <p><strong>Report ID:</strong> {{ $json[\"Report ID\"] }}</p>  <p><strong>Report Date:</strong> {{ $json[\"Report Date\"] }}</p>  <p><strong>Reported Condition:</strong> {{ $json[\"Disease\"] }}</p>  <p><strong>Risk Level:</strong> {{ $json[\"Risk Level\"] }}</p>  <p><strong>Summary:</strong><br> {{ $json[\"Summary\"] }}</p>  <p><strong>Doctor Advice:</strong><br> {{ $json[\"Doctor Advice\"] }}</p>  <p><strong>Medicines:</strong><br> {{ $json[\"Medicines\"] }}</p>  <p><strong>Lifestyle Tips:</strong><br> {{ $json[\"Lifestyle Tips\"] }}</p>  <hr>  <p><strong>Important:</strong> This AI-generated summary is for informational and decision-support purposes. Please consult a qualified healthcare professional for interpretation, diagnosis, or treatment decisions.</p>  <p>Regards,<br> <strong>AI Hospital Management System</strong></p>  </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        0
+      ],
+      "id": "f9b31584-02ec-45c6-8386-9521e670dc38",
+      "name": "Send Report to Patient",
+      "webhookId": "f0982377-8112-4536-9599-601129eee66c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XhPG9OTzQLa9qExV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 138577069,
+          "mode": "list",
+          "cachedResultName": "Activity Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=138577069"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Time": "={{ $now.toFormat('dd-MM-yyyy HH:mm:ss') }}",
+            "Workflow": "Medical Report Upload",
+            "Status": "Success",
+            "Patient ID": "={{ $('Find Patient').item.json[\"Patient ID\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Workflow",
+              "displayName": "Workflow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Patient ID",
+              "displayName": "Patient ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1728,
+        -64
+      ],
+      "id": "24a029fc-4866-428a-86dd-63ab9ad170bf",
+      "name": "Log Activity",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "OCR Medical Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR Medical Report": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Patient": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Find Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Report to Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High Risk?": {
+      "main": [
+        [
+          {
+            "node": "Notify Doctor - High Risk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Report to Patient": {
+      "main": [
+        [
+          {
+            "node": "High Risk?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Doctor - High Risk": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "oafeLejW0aewhE6r",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

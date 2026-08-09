@@ -1,0 +1,201 @@
+{
+  "name": "Hospital Weekly Analytics  5",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a151bef8-7384-4f12-a124-a5c601f6c1bb",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0",
+          "mode": "list",
+          "cachedResultName": "AI_Hospital database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 481978696,
+          "mode": "list",
+          "cachedResultName": "Appointments",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18um1V8XbMe5Nzsyscoq93rJjsgRAF0HY01DGHOT6GX0/edit#gid=481978696"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        288,
+        0
+      ],
+      "id": "9951b94d-d850-4597-ace3-546c77bd9a47",
+      "name": "Read Appointments",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WRk2AHwZP9Nb6bQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "id": "d113280d-f303-407c-94ce-8580ce743bd7",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI",
+          "cachedResultUrl": ""
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Create a professional weekly hospital analytics report from the appointment data below.\n\nAppointment data:\n{{ JSON.stringify($('Aggregate').item.json.data) }}\n\nCalculate the actual results from the data.\n\nInclude:\n1. Reporting Period\n2. Total Unique Patients\n3. Total Appointments\n4. Scheduled Appointments\n5. Confirmed Appointments\n6. Completed Visits\n7. Missed/No-Show Visits\n8. Key Observations\n9. Recommendations\n\nIf disease information is available, include Common Diseases. Otherwise state that disease information is not available.\n\nReturn the finished report as clean HTML suitable for an email.\n\nUse professional hospital-report language.\nUse headings, paragraphs, bullet points, and good spacing.\nDo not repeat these instructions.\nDo not show the raw appointment data.\nDo not show calculation instructions.\nDo not use Markdown.\nDo not offer additional help.\nDo not invent information.\nReturn ONLY the final HTML report."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        0
+      ],
+      "id": "fcafae98-b798-4b56-996e-8cbda6c2684a",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dCi7lXyoyEqHc6Mr",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "karanjeetmanhas123@gmail.com",
+        "subject": "AI Hospital - Weekly Analytics Report",
+        "message": "={{ $json.output[0].content[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        0
+      ],
+      "id": "df8b369a-ad02-46db-bdba-89fc96301442",
+      "name": "Send a message",
+      "webhookId": "70bcdafb-73b9-4db2-b082-ed4a9507d294",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XhPG9OTzQLa9qExV",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Appointments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Appointments": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "oafeLejW0aewhE6r",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
